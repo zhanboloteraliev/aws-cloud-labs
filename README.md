@@ -132,8 +132,6 @@ Logged in as `dev-alice` in an incognito browser window and tested the following
 
 ## Screenshots
 
-> Add your screenshots to the `screenshots/` folder and link them here.
-
 | Screenshot | Description |
 |------------|-------------|
 | `my_groups.png` | IAM dashboard showing groups and users |
