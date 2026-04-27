@@ -134,7 +134,7 @@ Logged in as `dev-alice` in an incognito browser window and tested the following
 
 | Screenshot | Description |
 |------------|-------------|
-| !(my_groups.png) | IAM dashboard showing groups and users |
-| `custom_policy.png` | Custom policy JSON in the IAM policy editor |
-| `instance_deletion_denied.png` | dev-alice denied when trying to terminate EC2 instance |
-| `s3_bucket_deletion_denied.png` | dev-alice denied when trying to delete S3 bucket |
+| ![IAM Groups](my_groups.png) | IAM dashboard showing groups and users |
+| ![Custom Policy](custom_policy.png) | Custom policy JSON in the IAM policy editor |
+| ![Instance Deletion Denied](instance_deletion_denied.png) | dev-alice denied when trying to terminate EC2 instance |
+| ![S3 Deletion Denied](s3_bucket_deletion_denied.png) | dev-alice denied when trying to delete S3 bucket |
