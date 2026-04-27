@@ -19,5 +19,5 @@ each one simulates a real support scenario or architecture pattern.
 - [ ] AWS Solutions Architect Associate (studying)
 
 ## Contact
-https://www.linkedin.com/in/zhanbolot-erali-317a28173/
+https://www.linkedin.com/in/zhanbolot-erali-317a28173/ |
 ezhanbolot@gmail.com
