@@ -25,10 +25,10 @@ Each lab includes what I built, what went wrong, and how I fixed it.
 
 **What went wrong:** After logging in as dev-alice, the EC2 instance created by root was invisible. Turned out to be a region mismatch — root created the instance in us-east-1 but alice's console was showing us-west-2. Switching the region dropdown fixed it instantly. This is one of the most common real support tickets.
 
-![IAM Groups](lab-01/my_groups.png)
-![Custom Policy](lab-01/custom_policy.png)
-![EC2 Termination Denied](lab-01/instance_deletion_denied.png)
-![S3 Deletion Denied](lab-01/s3_bucket_deletion_denied.png)
+![IAM Groups](screenshots/my_groups.png)
+![Custom Policy](screenshots/custom_policy.png)
+![EC2 Termination Denied](screenshots/instance_deletion_denied.png)
+![S3 Deletion Denied](screenshots/s3_bucket_deletion_denied.png)
 
 ---
 
@@ -38,9 +38,9 @@ Each lab includes what I built, what went wrong, and how I fixed it.
 
 **Key lesson:** CloudTrail is the answer to "who did this and when" — every action in AWS is logged including logins, resource changes, and deletions. Event records contain sensitive info (account ID, IP address) so screenshots should be redacted before posting publicly.
 
-![Force MFA Policy](lab-02/custommfapol.png)
+![Force MFA Policy](screenshots/custommfapol.png)
 
-![CloudTrail Events](lab-02/cloudtrailevents.png)
+![CloudTrail Events](screenshots/cloudtrailevents.png)
 
 ---
 
