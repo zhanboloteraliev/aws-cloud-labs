@@ -43,6 +43,70 @@ Each lab includes what I built, what went wrong, and how I fixed it.
 
 ---
 
+## Lab 03 — IAM Roles for EC2
+
+**What I built:** Created an IAM Role with S3 read-only access and attached it 
+to an EC2 instance. Tested before and after attaching the role to prove the 
+difference. Confirmed least privilege by verifying that listing S3 buckets 
+worked but creating buckets was denied. Used IMDSv2 to query the metadata 
+endpoint and confirm the role and temporary credentials were active.
+
+**Key lesson:** Never put AWS access keys inside EC2 instances. IAM Roles give 
+instances automatic temporary credentials rotated every 6 hours by AWS STS — 
+safer, easier to manage, and the correct AWS-recommended approach. Temporary 
+credentials start with ASIA, permanent keys start with AKIA — knowing the 
+difference matters in real support tickets.
+
+**What went wrong:** IMDSv1 curl returned empty output because AWS enforces 
+IMDSv2 by default on modern instances. Fixed by getting a token first then 
+using it in the curl request. This exists because of the 2019 Capital One 
+breach where SSRF attacks exploited IMDSv1 to steal IAM credentials.
+Terminal Output:
+'[ec2-user@ip-172-31-43-233 ~]$ aws s3 ls
+Unable to locate credentials. You can configure credentials by running "aws configure".
+
+[ec2-user@ip-172-31-43-233 ~]$ aws s3 ls
+2026-04-28 19:22:06 aws-cloudtrail-logs-[ACCOUNT-ID-REDACTED]-616b7561
+2026-04-28 19:34:49 aws-cloudtrail-logs-[ACCOUNT-ID-REDACTED]-dc7ee138
+
+[ec2-user@ip-172-31-43-233 ~]$ aws s3 mb s3://test-bucket-from-ec2-12345
+make_bucket failed: s3://test-bucket-from-ec2-12345 
+An error occurred (AccessDenied) when calling the CreateBucket operation: 
+User: arn:aws:sts::[ACCOUNT-ID-REDACTED]:assumed-role/EC2-S3-ReadOnly-Role/[INSTANCE-ID-REDACTED] 
+is not authorized to perform: s3:CreateBucket because no identity-based policy 
+allows the s3:CreateBucket action
+
+[ec2-user@ip-172-31-43-233 ~]$ curl http://169.254.169.254/latest/meta-data/iam/info
+(empty - IMDSv1 blocked, requires IMDSv2)
+
+[ec2-user@ip-172-31-43-233 ~]$ TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+[ec2-user@ip-172-31-43-233 ~]$ curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/iam/info
+{
+  "Code" : "Success",
+  "LastUpdated" : "2026-04-29T22:19:47Z",
+  "InstanceProfileArn" : "arn:aws:iam::[ACCOUNT-ID-REDACTED]:instance-profile/EC2-S3-ReadOnly-Role",
+  "InstanceProfileId" : "[REDACTED]"
+}
+
+[ec2-user@ip-172-31-43-233 ~]$ curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/
+EC2-S3-ReadOnly-Role
+
+[ec2-user@ip-172-31-43-233 ~]$ curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2-S3-ReadOnly-Role
+{
+  "Code" : "Success",
+  "LastUpdated" : "2026-04-29T22:19:56Z",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "ASIA-[REDACTED]",
+  "SecretAccessKey" : "[REDACTED]",
+  "Token" : "[REDACTED]",
+  "Expiration" : "2026-04-30T04:48:53Z"
+}'
+---
 ## About Me
 Actively building hands-on AWS skills to prepare for a Cloud Support Engineer role.
 
