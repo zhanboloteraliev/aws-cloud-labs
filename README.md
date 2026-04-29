@@ -27,7 +27,6 @@ Each lab includes what I built, what went wrong, and how I fixed it.
 
 ![IAM Groups](screenshots/my_groups.png)
 ![Custom Policy](screenshots/custom_policy.png)
-![EC2 Termination Denied](screenshots/instance_deletion_denied.png)
 ![S3 Deletion Denied](screenshots/s3_bucket_deletion_denied.png)
 
 ---
