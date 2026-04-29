@@ -61,6 +61,7 @@ difference matters in real support tickets.
 IMDSv2 by default on modern instances. Fixed by getting a token first then 
 using it in the curl request. This exists because of the 2019 Capital One 
 breach where SSRF attacks exploited IMDSv1 to steal IAM credentials.
+
 ---
 ## About Me
 Actively building hands-on AWS skills to prepare for a Cloud Support Engineer role.
