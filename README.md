@@ -5,9 +5,8 @@ Each lab simulates a real support ticket — including mistakes made and how the
 
 **Goal:** Cloud Support Associate / Cloud Support Engineer
 
-- LinkedIn: [your LinkedIn URL]
-- Email: [your email]
-
+- LinkedIn: https://www.linkedin.com/in/zhanbolot-erali-317a28173/
+- Email: ezhanbolot@gmail.com
 ---
 
 ### 🔧 [IAM Troubleshooting](iam-troubleshooting/README.md)
