@@ -63,7 +63,6 @@ You need to rule out all five before you can tell the customer what is wrong.
 7. Attach it to the `Developers` group (alice is in this group)
 Now alice has `AmazonS3FullAccess` directly on her user but a hidden Deny on her group. This is the broken state.
  
-Screenshot alice's permissions page showing both policies.
  
 ---
  
@@ -90,8 +89,6 @@ Result shows: ❌ **implicitly denied** or ❌ **explicitly denied**
  
 If it shows **explicitly denied** — there is a Deny somewhere. This narrows it down immediately.
  
-Screenshot the simulation result.
- 
 ---
  
 #### Step 4 — Find the Deny
@@ -100,8 +97,6 @@ Screenshot the simulation result.
 2. It expands and shows which policy caused the denial
 3. You will see `Hidden-Deny-Policy` listed as the reason
 In a real support ticket the customer would not know this policy exists — maybe another admin added it, maybe it came from a group they forgot alice was in. Now you know exactly what to fix.
- 
-Screenshot the expanded denial showing the policy name.
  
 ---
  
@@ -116,8 +111,6 @@ Screenshot the expanded denial showing the policy name.
 3. Expand each policy and read what it does
 This is the manual version of what the Policy Simulator does automatically. Knowing both methods matters — sometimes the simulator is not available, sometimes you need to explain it to a customer step by step.
  
-Screenshot the full permissions view showing all sources.
- 
 ---
  
 #### Step 6 — Fix It
@@ -127,9 +120,7 @@ Screenshot the full permissions view showing all sources.
 3. Go to **IAM → User groups → Developers → Permissions**
 4. Find `Hidden-Deny-Policy` → click **Remove**
 Now test again as alice — the upload works. ✅
- 
-Screenshot the successful upload.
- 
+
 ---
  
 #### Step 7 — Verify With Policy Simulator Again
