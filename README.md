@@ -10,13 +10,14 @@ Each lab simulates a real support ticket — including mistakes made and how the
 ---
 
 ### 🔧 [IAM Troubleshooting](iam-troubleshooting/README.md)
-
+ 
 Real-world IAM support scenarios — break, diagnose, and fix.
-
+ 
 | Scenario | Description |
 |----------|-------------|
 | [T-01 — Policy Not Working as Expected](iam-troubleshooting/README.md#t-01--policy-not-working-as-expected) | User has S3 policy attached but still gets AccessDenied — diagnosing why |
-
+| [T-02 — Conflicting Policies Allow vs Deny](iam-troubleshooting/README.md#t-02--conflicting-policies-allow-vs-deny) | User is in two groups with conflicting permissions — understanding evaluation order |
+ 
 ---
 
 ### 💻 Compute — EC2 *(coming soon)*
