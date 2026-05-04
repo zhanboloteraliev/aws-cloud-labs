@@ -6,6 +6,7 @@ These are real-world IAM scenarios I worked through — each one based on the ki
 |----------|--------|
 | [T-01](#t-01--policy-not-working-as-expected) | "I gave my user S3 access but it still says denied" |
 | [T-02](#t-02--conflicting-policies-allow-vs-deny) | "My user is in two groups with different permissions, which one wins?" |
+| [T-03](#t-03--wrong-resource-arn-bucket-vs-object) | "I gave the user `s3:GetObject`, but downloading from S3 still says AccessDenied" |
 
 ---
 
@@ -216,3 +217,234 @@ Adding more Allows does nothing when a Deny exists. I tested this — gave alice
 **Q: User is in two groups — one allows S3, one denies S3. What happens?**
 
 Deny wins. AWS evaluates all policies that apply to a user together. If any statement anywhere says Deny for that action, the request is denied — it does not matter how many Allows exist elsewhere. The only exception is if an AWS Organizations SCP is involved, which adds another layer above IAM policies entirely.
+
+---
+
+## T-03 — Wrong Resource ARN: Bucket vs Object
+
+### The Ticket
+> *"I gave the user `s3:GetObject`, but they still get AccessDenied when trying to download a file from S3."*
+
+This lab helped me understand one of the most common IAM mistakes: the policy action can be correct, but the `Resource` ARN can still point to the wrong level of S3.
+
+---
+
+### What I Was Trying to Understand
+
+Before this lab I knew that IAM policies have an `Action` and a `Resource`, but I did not fully understand why this fails:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::my-bucket"
+}
+```
+
+The mistake is that `s3:GetObject` is an object-level action. It does not apply to the bucket container itself. It applies to files inside the bucket.
+
+The mental model that made it click:
+
+```text
+arn:aws:s3:::my-bucket      = the bucket itself
+arn:aws:s3:::my-bucket/*    = all objects/files inside the bucket
+```
+
+So this is the difference:
+
+| Action | Correct Resource Level |
+|--------|------------------------|
+| `s3:ListBucket` | `arn:aws:s3:::my-bucket` |
+| `s3:GetObject` | `arn:aws:s3:::my-bucket/*` |
+| `s3:PutObject` | `arn:aws:s3:::my-bucket/*` |
+| `s3:DeleteObject` | `arn:aws:s3:::my-bucket/*` |
+
+---
+
+### How I Set Up the Lab
+
+Created an S3 bucket and uploaded a small test file:
+
+```text
+hello.txt
+```
+
+Then created a test IAM user for the AWS CLI lab:
+
+```text
+iam-arn-lab-user
+```
+
+Configured a separate CLI profile so I would not affect my normal AWS credentials:
+
+```bash
+aws configure --profile arn-lab
+```
+
+At first I accidentally entered this as the default region:
+
+```text
+global
+```
+
+Then `sts get-caller-identity` failed with this error:
+
+```bash
+aws sts get-caller-identity --profile arn-lab
+
+aws: [ERROR]: Could not connect to the endpoint URL: "https://sts.global.amazonaws.com/"
+```
+
+The fix was to use a real AWS region code instead of `global`:
+
+```bash
+aws configure set region us-west-2 --profile arn-lab
+aws sts get-caller-identity --profile arn-lab
+```
+
+Lesson: IAM may feel global in the console, but the AWS CLI profile still needs a real region such as `us-west-2` or `us-east-1`.
+
+---
+
+### How I Created the Broken State
+
+I attached this wrong inline policy to the test IAM user:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WrongBucketArnForGetObject",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME"
+    }
+  ]
+}
+```
+
+Then I tried to download the file:
+
+```bash
+aws s3 cp s3://YOUR-BUCKET-NAME/hello.txt ./downloaded.txt --profile arn-lab
+```
+
+Result:
+
+```text
+AccessDenied
+```
+
+At first this looks confusing because the policy clearly says `Allow` for `s3:GetObject`. The problem is not the action. The problem is the resource ARN.
+
+---
+
+### How I Diagnosed It
+
+The request was trying to access this object:
+
+```text
+arn:aws:s3:::YOUR-BUCKET-NAME/hello.txt
+```
+
+But the policy only allowed this bucket-level ARN:
+
+```text
+arn:aws:s3:::YOUR-BUCKET-NAME
+```
+
+Those are not the same resource.
+
+The policy was basically saying:
+
+```text
+You can GetObject on the bucket itself.
+```
+
+But the actual request was:
+
+```text
+Can I GetObject on hello.txt inside the bucket?
+```
+
+Since the object ARN did not match the policy resource, AWS denied the request.
+
+---
+
+### The Fix
+
+Changed the policy from the bucket ARN:
+
+```json
+"Resource": "arn:aws:s3:::YOUR-BUCKET-NAME"
+```
+
+To the object ARN pattern:
+
+```json
+"Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+```
+
+Final working policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowGetObjectFromBucketObjects",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+    }
+  ]
+}
+```
+
+Retested:
+
+```bash
+aws s3 cp s3://YOUR-BUCKET-NAME/hello.txt ./downloaded.txt --profile arn-lab
+cat downloaded.txt
+```
+
+Expected result:
+
+```text
+hello iam lab
+```
+
+---
+
+### What This Taught Me
+
+This lab taught me that IAM troubleshooting is not only about asking, "Does the user have the action allowed?" I also need to ask, "Is the action allowed on the exact resource AWS is checking?"
+
+For S3 specifically, I now check bucket-level and object-level ARNs separately:
+
+```text
+Bucket-level permission needed?  Use arn:aws:s3:::bucket-name
+Object-level permission needed?  Use arn:aws:s3:::bucket-name/*
+```
+
+This is why `s3:ListBucket` and `s3:GetObject` often need two different statements in the same policy.
+
+---
+
+### Ticket-Style Root Cause
+
+Root cause: The IAM policy allowed `s3:GetObject`, but the `Resource` used the bucket ARN instead of the object ARN. `GetObject` applies to files inside the bucket, so AWS evaluated the request against `arn:aws:s3:::bucket-name/hello.txt`, which did not match `arn:aws:s3:::bucket-name`. Updating the resource to `arn:aws:s3:::bucket-name/*` fixed the download issue.
+
+---
+
+### Cleanup
+
+After the lab I removed the temporary resources:
+
+- Deleted the access key for `iam-arn-lab-user`
+- Deleted the test IAM user
+- Deleted `hello.txt`
+- Deleted the test S3 bucket
+
+I should never leave lab IAM users or access keys active after testing.
