@@ -17,6 +17,7 @@ Real-world IAM support scenarios — break, diagnose, and fix.
 |----------|-------------|
 | [T-01 — Policy Not Working as Expected](iam-troubleshooting/README.md#t-01--policy-not-working-as-expected) | User has S3 policy attached but still gets AccessDenied — diagnosing why |
 | [T-02 — Conflicting Policies Allow vs Deny](iam-troubleshooting/README.md#t-02--conflicting-policies-allow-vs-deny) | User is in two groups with conflicting permissions — understanding evaluation order |
+| [T-03 — Wrong Resource ARN Bucket vs Object](iam-troubleshooting/README.md#t-03--wrong-resource-arn-bucket-vs-object) | User has `s3:GetObject` allowed but download still fails because the policy points to the bucket ARN instead of the object ARN |
  
 ---
 
