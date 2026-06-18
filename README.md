@@ -3,7 +3,6 @@
 Hands-on AWS labs and troubleshooting scenarios built to prepare for Cloud Support Engineer roles.
 Each lab simulates a real support ticket — including mistakes made and how they were fixed.
 
-**Goal:** Cloud Support Associate / Cloud Support Engineer
 
 - LinkedIn: https://www.linkedin.com/in/zhanbolot-erali-317a28173/
 - Email: ezhanbolot@gmail.com
